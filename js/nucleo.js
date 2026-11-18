@@ -8,7 +8,8 @@ const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const PAPEIS={master:'Administrador master',financeiro:'Financeiro',compras:'Compras',estoque:'Estoque',operacao:'Operação',banho_tosa:'Banho e tosa'};
 // Mercado Livre desligado até a integração ser concluída (trocar para true para reativar telas e filtros)
 const ML_ATIVO=false;
-const LOGO_SVG=`<svg width="24" height="24" viewBox="0 0 64 64"><circle cx="22" cy="22" r="6" fill="#fff"/><circle cx="42" cy="22" r="6" fill="#fff"/><circle cx="13" cy="35" r="5" fill="#fff"/><circle cx="51" cy="35" r="5" fill="#fff"/><ellipse cx="32" cy="44" rx="12" ry="10" fill="#fff"/></svg>`;
+const LOGO_IMG='<img src="img/logo-512.png" alt="Pet Puppy">';
+const LOGO_SVG_OLD=`<svg width="24" height="24" viewBox="0 0 64 64"><circle cx="22" cy="22" r="6" fill="#fff"/><circle cx="42" cy="22" r="6" fill="#fff"/><circle cx="13" cy="35" r="5" fill="#fff"/><circle cx="51" cy="35" r="5" fill="#fff"/><ellipse cx="32" cy="44" rx="12" ry="10" fill="#fff"/></svg>`;
 // [id, rótulo, papéis que veem (vazio = todos)]
 const AREAS=[
  ['visao','Visão geral',['financeiro','compras','operacao']],
@@ -107,14 +108,14 @@ function detalhar(titulo,explicacao,cols,linhas,opc={}){
 // ---------- login ----------
 function telaLogin(msg,ok){
   const cad=modoLogin==='criar',rec=modoLogin==='esqueci';
-  $('raiz').innerHTML=`<div class="login"><div class="logo">${LOGO_SVG}</div><h1>Gestão Pet Puppy</h1>
+  $('raiz').innerHTML=`<div class="tela-login"><div class="login">${LOGO_IMG}<h1>Gestão Pet Puppy</h1>
   <div class="sub">${cad?'Crie seu acesso. O administrador libera o seu perfil.':rec?'Enviaremos um link para criar uma nova senha.':'Entre com seu e-mail e senha.'}</div>
   <form id="fl">${cad?'<div class="campo"><label>Seu nome</label><input id="l_nome" required></div>':''}
   <div class="campo"><label>E-mail</label><input id="l_email" type="email" autocomplete="email" required></div>
   ${rec?'':`<div class="campo"><label>Senha</label><input id="l_senha" type="password" minlength="8" autocomplete="${cad?'new-password':'current-password'}" required></div>`}
   <div class="erro" id="l_erro" style="${ok?'color:var(--grn)':''}">${esc(msg||'')}</div>
   <button class="pri" id="l_ok">${cad?'Criar acesso':rec?'Enviar link':'Entrar'}</button></form>
-  <div class="alt">${cad||rec?'<button class="lk" data-m="entrar">Voltar</button>':'<button class="lk" data-m="criar">Criar acesso</button> · <button class="lk" data-m="esqueci">Esqueci a senha</button>'}</div></div>`;
+  <div class="alt">${cad||rec?'<button class="lk" data-m="entrar">Voltar</button>':'<button class="lk" data-m="criar">Criar acesso</button> · <button class="lk" data-m="esqueci">Esqueci a senha</button>'}</div></div></div>`;
   document.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{modoLogin=b.dataset.m;telaLogin();});
   $('fl').onsubmit=async e=>{e.preventDefault();const b=$('l_ok');b.disabled=true;$('l_erro').textContent='';const email=val('l_email');
     try{
@@ -125,9 +126,9 @@ function telaLogin(msg,ok){
     }catch(err){$('l_erro').textContent=/Invalid login/i.test(err.message)?'E-mail ou senha incorretos.':msgErro(err);b.disabled=false;}};
 }
 function telaPendente(){
-  $('raiz').innerHTML=`<div class="login"><div class="logo">${LOGO_SVG}</div><h1>Gestão Pet Puppy</h1><div class="sub">Olá, ${esc(perfil?.nome||sessao.user.email)}.</div>
+  $('raiz').innerHTML=`<div class="tela-login"><div class="login">${LOGO_IMG}<h1>Gestão Pet Puppy</h1><div class="sub">Olá, ${esc(perfil?.nome||sessao.user.email)}.</div>
   <p>Seu acesso foi criado e aguarda liberação do administrador.</p><button class="pri" onclick="carregarPerfil()">Verificar de novo</button>
-  <div class="alt"><button class="lk" onclick="sb.auth.signOut()">Sair</button></div></div>`;
+  <div class="alt"><button class="lk" onclick="sb.auth.signOut()">Sair</button></div></div></div>`;
 }
 sb.auth.onAuthStateChange((ev,s)=>{
   if(ev==='PASSWORD_RECOVERY'){sessao=s;setTimeout(()=>{abrir(`<h2>Nova senha</h2><div class="campo"><label>Nova senha (mín. 8)</label><input id="ns" type="password" minlength="8"></div><div class="erro"></div><div class="rodape"><button class="pri" id="ns_ok">Salvar</button></div>`);
@@ -159,9 +160,9 @@ async function carregarRef(){
 // ---------- navegação ----------
 function areasDoPapel(){if(papel()==='banho_tosa')return AREAS.filter(a=>a[0]==='banho');return AREAS.filter(a=>master()||!a[2].length||a[2].includes(papel()));}
 function montar(){
-  $('raiz').innerHTML=`<div class="app"><aside class="lado" id="lado"><div class="marca"><div class="logo">${LOGO_SVG}</div><div><b>Gestão Pet Puppy</b><small>Pet Puppy</small></div></div>
+  $('raiz').innerHTML=`<div class="app"><aside class="lado" id="lado"><div class="marca">${LOGO_IMG}<div><b>Gestão Pet Puppy</b><small>Nós cuidamos do seu pet!</small></div></div>
    <nav id="nav"></nav></aside>
-   <div class="principal"><div class="topo"><div style="display:flex;gap:10px;align-items:center"><button class="menu-mob sm" onclick="$('lado').classList.toggle('aberto')">☰</button><h1 id="titulo"></h1></div>
+   <div class="principal"><div class="topo"><div style="display:flex;gap:10px;align-items:center"><button class="menu-mob sm" onclick="$('lado').classList.toggle('aberto')">☰</button><img class="mini" src="img/favicon.png" alt=""><h1 id="titulo"></h1></div>
    <div class="quem"><span>${esc(perfil.nome||perfil.email)} · ${PAPEIS[perfil.papel]}</span><button class="sm" onclick="sb.auth.signOut()">Sair</button></div></div>
    <div class="conteudo" id="conteudo"></div></div></div>`;
   ir(area);

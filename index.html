@@ -6,13 +6,15 @@
 <meta name="google" content="notranslate">
 <meta name="robots" content="noindex,nofollow">
 <title>Gestão Pet Puppy</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230f5c4d'/%3E%3Ccircle cx='22' cy='24' r='6' fill='white'/%3E%3Ccircle cx='42' cy='24' r='6' fill='white'/%3E%3Ccircle cx='14' cy='36' r='5' fill='white'/%3E%3Ccircle cx='50' cy='36' r='5' fill='white'/%3E%3Cellipse cx='32' cy='44' rx='12' ry='10' fill='white'/%3E%3C/svg%3E">
+<link rel="icon" href="img/favicon.png">
+<link rel="apple-touch-icon" href="img/logo-192.png">
+<meta name="theme-color" content="#FFCC00">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" defer></script>
 <style>
-:root{--bg:#f4f5f3;--card:#fff;--ink:#17201d;--mut:#66706b;--line:#e2e5e1;--pri:#0f5c4d;--pri2:#0a4639;--pril:#e3f0ec;--red:#b42318;--redl:#fdecea;--amb:#a15c07;--ambl:#fef3e2;--blu:#1d4ed8;--blul:#e5edfd;--grn:#15803d;--grnl:#e3f6e9}
+:root{--bg:#fbf8ef;--card:#fff;--ink:#1b1a17;--mut:#6f6a5d;--line:#ece6d6;--pri:#FFCC00;--pri2:#F5B800;--pril:#fff6cc;--y1:#FFD83D;--y2:#FFC400;--escuro:#1b1a17;--red:#b42318;--redl:#fdecea;--amb:#a15c07;--ambl:#fef3e2;--blu:#1d4ed8;--blul:#e5edfd;--grn:#15803d;--grnl:#e3f6e9}
 *{box-sizing:border-box}
 html,body{margin:0}
 body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.45}
@@ -110,19 +112,52 @@ table.t tfoot td{font-weight:700;border-top:2px solid var(--line)}
 .chip-sug{display:block;width:100%;text-align:left;margin-bottom:4px}
 .mono{font-family:ui-monospace,Menlo,monospace;font-size:12px}
 .demo{background:#fde68a;color:#78350f;font-weight:700;padding:2px 8px;border-radius:6px;font-size:11px}
+
+/* ===== tema Pet Puppy (amarelo) ===== */
+button.pri{background:linear-gradient(180deg,var(--y1),var(--y2));border-color:#e6b000;color:#1b1a17;font-weight:700;box-shadow:0 1px 0 rgba(0,0,0,.06)}
+button.pri:hover{background:linear-gradient(180deg,#FFDF5C,#FFBE00);border-color:#d9a600}
+button.lk{color:#9a6b00}
+input:focus,select:focus,textarea:focus{outline:2px solid #FFD84D;border-color:transparent}
+.lado{background:linear-gradient(180deg,#1f1d18 0%,#14130f 100%);color:#e9e3d0;border-right:4px solid var(--pri)}
+.lado .marca{flex-direction:column;align-items:center;text-align:center;padding:8px 6px 18px;gap:8px;border-bottom:1px solid #2e2b23;margin-bottom:10px}
+.lado .marca img{width:112px;height:112px;filter:drop-shadow(0 6px 14px rgba(255,204,0,.25))}
+.lado .marca b{color:#FFCC00;font-size:16px;letter-spacing:.2px}.lado .marca small{color:#b8b09a}
+.lado nav button{color:#ddd6c2}
+.lado nav button:hover{background:#2a2720;color:#fff}
+.lado nav button.on{background:var(--pri);color:#1b1a17;font-weight:700}
+.lado nav button .n{background:#e5484d}
+.topo{border-bottom:3px solid var(--pri)}
+.topo h1{display:flex;align-items:center;gap:10px}
+.topo .mini{width:30px;height:30px;display:none}
+@media (max-width:860px){.topo .mini{display:block}}
+.kpi{border-top:3px solid var(--pri)}
+.kpi:hover{border-color:#e6c766;border-top-color:var(--pri2);box-shadow:0 4px 14px rgba(255,196,0,.15)}
+.kpi.alerta{border-color:#f1c38b;border-top-color:#f59e0b}
+.secao h2{border-left:4px solid var(--pri);padding-left:8px}
+.abas2 button.on{background:#1b1a17;color:#FFCC00;border-color:#1b1a17}
+.filtros{border-color:#efe5c3;background:#fffdf5}
+table.t th{background:#fff8dc}
+table.t tr.cl:hover td{background:#fffbe8}
+.drop.on{border-color:var(--pri2);background:var(--pril)}
+.linha-tempo .ev:before{background:var(--pri2)}
+.tela-login{min-height:100vh;background:radial-gradient(circle at 20% 10%,#FFE066 0,#FFCC00 40%,#F5B300 100%);display:flex;align-items:center;justify-content:center;padding:20px}
+.tela-login .login{margin:0;border:0;box-shadow:0 20px 50px rgba(80,55,0,.25);text-align:center}
+.tela-login .login img{width:150px;height:150px;margin-top:-90px;filter:drop-shadow(0 8px 18px rgba(0,0,0,.18))}
+.tela-login .login form{text-align:left}
+.tela-login .login h1{font-size:21px}
 </style>
 </head>
 <body>
-<div id="raiz"><div class="login"><div class="logo"></div><h1>Gestão Pet Puppy</h1><div class="sub">Carregando…</div></div></div>
+<div id="raiz"><div class="tela-login"><div class="login"><img src="img/logo-512.png" alt="Pet Puppy"><h1>Gestão Pet Puppy</h1><div class="sub">Carregando…</div></div></div></div>
 <div id="ov" class="ov oculto"><div id="modal" class="modal"></div></div>
 <div id="toast" class="toast oculto"></div>
-<script src="js/nucleo.js?v=3"></script>
-<script src="js/painel.js?v=3"></script>
-<script src="js/estoque.js?v=3"></script>
-<script src="js/notas.js?v=3"></script>
-<script src="js/financeiro.js?v=3"></script>
-<script src="js/integracoes.js?v=3"></script>
-<script src="js/banho.js?v=3"></script>
+<script src="js/nucleo.js?v=4"></script>
+<script src="js/painel.js?v=4"></script>
+<script src="js/estoque.js?v=4"></script>
+<script src="js/notas.js?v=4"></script>
+<script src="js/financeiro.js?v=4"></script>
+<script src="js/integracoes.js?v=4"></script>
+<script src="js/banho.js?v=4"></script>
 <script>iniciar();</script>
 </body>
 </html>

@@ -122,11 +122,11 @@ function grafMeses(pm){
   const bw=(W-pad*2)/pm.length;
   const bars=pm.map((x,i)=>{const h=(x.liquido/max)*(H-40),hl=veCusto()?Math.max(0,(x.lucro/max)*(H-40)):0,X=pad+i*bw;
     return `<g><title>${mesNome(x.ym)}: líquido ${brl(x.liquido)}${veCusto()?' · lucro bruto '+brl(x.lucro):''}</title>
-    <rect x="${X+bw*.12}" y="${H-20-h}" width="${bw*.4}" height="${Math.max(0,h)}" rx="3" fill="${x.andamento?'#9cc9bd':'#0f5c4d'}"/>
-    ${veCusto()?`<rect x="${X+bw*.52}" y="${H-20-hl}" width="${bw*.32}" height="${hl}" rx="3" fill="${x.andamento?'#f3d19c':'#d98a1f'}"/>`:''}
+    <rect x="${X+bw*.12}" y="${H-20-h}" width="${bw*.4}" height="${Math.max(0,h)}" rx="3" fill="${x.andamento?'#FFE699':'#F2B600'}"/>
+    ${veCusto()?`<rect x="${X+bw*.52}" y="${H-20-hl}" width="${bw*.32}" height="${hl}" rx="3" fill="${x.andamento?'#bdb8ab':'#2b2925'}"/>`:''}
     <text x="${X+bw/2}" y="${H-5}" font-size="11" text-anchor="middle" fill="#66706b">${mesNome(x.ym)}</text></g>`;}).join('');
   return `<svg class="graf" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">${bars}<line x1="${pad}" x2="${W-pad}" y1="${H-20}" y2="${H-20}" stroke="#e2e5e1"/></svg>
-  <div class="legenda"><span><i style="background:#0f5c4d"></i>Faturamento líquido</span>${veCusto()?'<span><i style="background:#d98a1f"></i>Lucro bruto</span>':''}<span><i style="background:#9cc9bd"></i>Mês em andamento</span></div>`;
+  <div class="legenda"><span><i style="background:#F2B600"></i>Faturamento líquido</span>${veCusto()?'<span><i style="background:#2b2925"></i>Lucro bruto</span>':''}<span><i style="background:#FFE699"></i>Mês em andamento</span></div>`;
 }
 function rankingProdutos(M,modo){
   const m={};M.vendas.forEach(v=>{if(v.status==='cancelada')return;const f=v.status==='devolvida'?0:1;(F.produto||F.categoria?itensFiltrados(v):(v.pp_venda_itens||[])).forEach(i=>{
