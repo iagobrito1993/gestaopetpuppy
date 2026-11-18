@@ -142,7 +142,7 @@ async function carregarPerfil(){
   try{perfil=await rpc('pp_entrar');}catch(e){$('raiz').innerHTML=`<div class="login"><h1>Gestão Pet Puppy</h1><p class="erro">Não foi possível carregar seu acesso: ${esc(msgErro(e))}</p><button onclick="location.reload()">Recarregar</button> <button onclick="sb.auth.signOut()">Sair</button></div>`;return;}
   if(!perfil||!perfil.papel||!perfil.ativo)return telaPendente();
   await carregarRef();
-  const h=location.hash.replace('#','').split('?')[0];
+  let h=location.hash.replace('#','').split('?')[0];if(h==='svsync'){h='integracoes';abaInt='simplesvet';}
   area=areasDoPapel().find(a=>a[0]===h)?h:(area||areasDoPapel()[0][0]);
   montar();
 }

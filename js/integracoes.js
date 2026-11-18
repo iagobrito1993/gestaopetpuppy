@@ -23,11 +23,18 @@ TELAS.integracoes=async function(extra){
     return;
   }
   if(abaInt==='simplesvet'){
-    $('conteudo').innerHTML=ab+`<div class="info">O SimplesVet não oferece API pública para integração. A alternativa é exportar relatórios do SimplesVet (CSV/Excel) e importar aqui — o sistema mostra uma conferência antes de gravar e reimportar o mesmo arquivo não duplica registros. O "SimpleZ" mencionado é o próprio SimplesVet.</div>
+    const ult=(await q(sb.from('pp_sync_log').select('*').eq('fonte','simplesvet').order('id',{ascending:false}).limit(1)))[0];
+    $('conteudo').innerHTML=ab+`<div class="secao"><h2>Sincronização com o SimplesVet <small>${ult?'última: '+fdh(ult.terminado_em||ult.iniciado_em)+' · '+esc(ult.status):'ainda não sincronizado'}</small></h2>
+     <p style="margin-top:0">Traz do SimplesVet as <b>vendas</b> (com itens, descontos e devoluções), os <b>produtos</b> (código, código de barras, categoria, custo) e o <b>estoque</b> da loja. Rodar de novo não duplica nada: só entra o que é novo ou mudou.</p>
+     <ol style="margin:0 0 10px 18px;padding:0"><li>Uma vez só: arraste o botão amarelo abaixo para a <b>barra de favoritos</b> do Chrome.</li><li>Abra o <b>SimplesVet</b> (logado) e clique no favorito <b>"Sincronizar Pet Puppy"</b>.</li><li>Abre uma janela do Gestão Pet Puppy e a gravação acontece sozinha. Pronto.</li></ol>
+     <a id="sv_bm" class="sm" style="display:inline-block;background:#FFCC00;color:#1b1a17;font-weight:700;padding:9px 16px;border-radius:9px;text-decoration:none;border:1px solid #F2B600" href="#" onclick="if(this.getAttribute('href').startsWith('#')){toast('Arraste este botão para a barra de favoritos.');return false;}">⭐ Sincronizar Pet Puppy</a>
+     <div class="mut peq" style="margin-top:8px">Não é em tempo real: os dados ficam atualizados até a última sincronização. A leitura usa o seu login do SimplesVet dentro do próprio SimplesVet; nenhuma senha é guardada aqui.</div></div>
+     <div class="info">Alternativa manual: exportar relatórios do SimplesVet (CSV/Excel) e importar aqui, com conferência antes de gravar.</div>
     <div class="kpis">
      ${[['sv_produtos','Produtos, estoque e custos','Comercial → Produtos e serviços → exportar'],['sv_vendas','Vendas (itens)','Vendas → Vendas → Exportar para CSV'],['sv_mov','Movimentações de estoque','Estoque → Movimentações → exportar'],['sv_fin','Contas a pagar e a receber','Financeiro → Contas → exportar'],...(ML_ATIVO?[['ml_vendas','Relatório de vendas do Mercado Livre','Vendas → Exportar (Excel) — alternativa à API']]:[])]
        .map(([k,t,s])=>`<div class="kpi" onclick="modalImportar('${k}')"><div class="l">Importar</div><div class="v" style="font-size:16px">${t}</div><div class="s">${s}</div></div>`).join('')}
      <div class="kpi" onclick="ir('nfe')"><div class="l">Importar</div><div class="v" style="font-size:16px">XML de notas fiscais</div><div class="s">Entrada e saída, em lote</div></div></div>`;
+    linkSincronizadorSV().then(h=>{const a=$('sv_bm');if(a&&h!=='#')a.setAttribute('href',h);});
     return;
   }
   if(abaInt==='log'){
@@ -265,3 +272,40 @@ async function abrirPendencia(p){
   $('pd_ok').onclick=()=>rodar($('pd_ok'),async()=>{const s=val('pd_s');await q(sb.from('pp_pendencias').update({responsavel:val('pd_r')||null,status:s,obs:val('pd_o')||null,resolvido_em:['resolvida','ignorada'].includes(s)?new Date().toISOString():null}).eq('id',p.id));
     await q(sb.from('pp_pendencia_hist').insert({pendencia_id:p.id,status:s,obs:val('pd_o')||null}));fechar();toast('Pendência atualizada.');if(area==='conciliacao')ir('conciliacao');});
 }
+
+// ---------- Sincronização com o SimplesVet (recebe dados da aba do SimplesVet) ----------
+const SV_ORIGEM='https://app.simples.vet';
+let svRodando=false;
+window.addEventListener('message',e=>{
+  if(e.origin!==SV_ORIGEM||!e.data)return;
+  if(e.data.tipo==='pp-ping'){if(perfil&&perfil.papel&&tem('financeiro'))e.source.postMessage({tipo:'pp-pronto'},SV_ORIGEM);return;}
+  if(e.data.tipo==='pp-dados'&&!svRodando)sincronizarSV(e.data,e.source);
+});
+function svProgresso(t,pct){const el=$('sv_prog');if(el)el.innerHTML=`<div style="font-weight:600;margin-bottom:6px">${esc(t)}</div><div style="height:10px;background:#f1ead2;border-radius:99px;overflow:hidden"><div style="height:100%;width:${Math.round(pct||0)}%;background:#FFCC00"></div></div>`;}
+async function sincronizarSV(d,fonte){
+  svRodando=true;
+  const loc=(REF.locais.find(l=>l.tipo==='loja')||REF.locais[0]||{}).id;
+  abrir(`<h2>Sincronizando com o SimplesVet</h2><div class="sub">${nf(d.vendas.length)} vendas e ${nf(d.produtos.length)} produtos recebidos. Não feche esta janela.</div><div id="sv_prog"></div><div id="sv_res" style="margin-top:12px"></div>`);
+  const log=await q(sb.from('pp_sync_log').insert({fonte:'simplesvet',tipo:'produtos,vendas,estoque',conta:'Loja',status:'rodando',lidos:d.vendas.length+d.produtos.length}).select().single()).catch(()=>null);
+  const R={prodNovos:0,prodExist:0,saldosIni:0,vNovas:0,vAtual:0,vIguais:0,ajustes:0,erros:[]};
+  const tot=d.produtos.length+d.vendas.length+d.produtos.length;let feito=0;
+  const lote=async(arr,n,fn,rot)=>{for(let i=0;i<arr.length;i+=n){const pedaco=arr.slice(i,i+n);
+      try{await fn(pedaco);}catch(e){R.erros.push(rot+' '+(i+1)+'–'+(i+pedaco.length)+': '+msgErro(e));}
+      feito+=pedaco.length;svProgresso(rot+' ('+nf(Math.min(i+n,arr.length))+' de '+nf(arr.length)+')',feito/tot*100);}};
+  try{
+    await lote(d.produtos,120,async p=>{const r=await rpc('pp_sv_produtos',{p,p_local:loc,p_inicio:d.inicio});R.prodNovos+=r.novos;R.prodExist+=r.existentes;R.saldosIni+=r.saldos_iniciais;},'Produtos');
+    await lote(d.vendas,60,async v=>{const r=await rpc('pp_sv_vendas',{v,p_local:loc});R.vNovas+=r.novas;R.vAtual+=r.atualizadas;R.vIguais+=r.sem_alteracao;},'Vendas');
+    const ref=new Date().toISOString().slice(0,16);
+    await lote(d.produtos.map(p=>({codigo:p.id,estoque:p.estoque})),250,async a=>{R.ajustes+=await rpc('pp_sv_ajustar',{a,p_local:loc,p_ref:ref});},'Conferindo estoque');
+    try{await rpc('pp_gerar_pendencias');}catch(e){}
+  }catch(e){R.erros.push(msgErro(e));}
+  const texto=`Sincronização concluída: ${nf(R.vNovas)} vendas novas, ${nf(R.vAtual)} atualizadas, ${nf(R.vIguais)} sem alteração · ${nf(R.prodNovos)} produtos novos · ${nf(R.ajustes)} ajustes de estoque${R.erros.length?' · '+R.erros.length+' erros':''}.`;
+  if(log)await sb.from('pp_sync_log').update({status:R.erros.length?(R.vNovas+R.vAtual+R.vIguais?'parcial':'erro'):'ok',terminado_em:new Date().toISOString(),gravados:R.vNovas+R.vAtual+R.prodNovos+R.ajustes,duplicados:R.vIguais+R.prodExist,erros:R.erros.length,mensagem:texto,detalhes:R.erros}).eq('id',log.id);
+  svProgresso('Concluído',100);
+  $('sv_res').innerHTML=`<div class="${R.erros.length?'aviso':'info'}">${esc(texto)}${R.erros.length?'<br>'+R.erros.slice(0,5).map(esc).join('<br>'):''}</div>
+   <div class="mut peq">O estoque da loja passa a seguir o SimplesVet: vendas viram saídas e as demais diferenças (compras, perdas) entram como ajuste. Custos vindos do SimplesVet ficam marcados como "sem nota" até a nota fiscal ser lançada.</div>
+   <div class="rodape"><button class="pri" onclick="fechar();carregarRef().then(()=>ir('visao'))">Ver painel</button></div>`;
+  try{fonte.postMessage({tipo:'pp-fim',texto},SV_ORIGEM);}catch(e){}
+  svRodando=false;
+}
+async function linkSincronizadorSV(){try{const t=await (await fetch('sv-sync.js?'+Date.now())).text();return 'javascript:'+encodeURIComponent(t.replace(/^\s*\/\/.*$/gm,''));}catch(e){return '#';}}
