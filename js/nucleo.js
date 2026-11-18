@@ -159,7 +159,7 @@ async function carregarRef(){
 // ---------- navegação ----------
 function areasDoPapel(){if(papel()==='banho_tosa')return AREAS.filter(a=>a[0]==='banho');return AREAS.filter(a=>master()||!a[2].length||a[2].includes(papel()));}
 function montar(){
-  $('raiz').innerHTML=`<div class="app"><aside class="lado" id="lado"><div class="marca"><div class="logo">${LOGO_SVG}</div><div><b>Gestão Pet Puppy</b><small>Pet Puppy &amp; Cia</small></div></div>
+  $('raiz').innerHTML=`<div class="app"><aside class="lado" id="lado"><div class="marca"><div class="logo">${LOGO_SVG}</div><div><b>Gestão Pet Puppy</b><small>Pet Puppy</small></div></div>
    <nav id="nav"></nav></aside>
    <div class="principal"><div class="topo"><div style="display:flex;gap:10px;align-items:center"><button class="menu-mob sm" onclick="$('lado').classList.toggle('aberto')">☰</button><h1 id="titulo"></h1></div>
    <div class="quem"><span>${esc(perfil.nome||perfil.email)} · ${PAPEIS[perfil.papel]}</span><button class="sm" onclick="sb.auth.signOut()">Sair</button></div></div>
