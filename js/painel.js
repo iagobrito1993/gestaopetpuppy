@@ -65,7 +65,9 @@ TELAS.visao=async function(){
   // por mês (12 meses)
   const meses=[];for(let d=inicioMes(addDias(inicioMes(hoje),-334));d<=hoje;d=inicioMes(addDias(d,32)))meses.push(d.slice(0,7));
   const porMes=meses.map(ym=>{const m=metricas(vendas.filter(v=>diaLocal(v.data_venda).slice(0,7)===ym),lancs.filter(l=>(l.competencia||l.vencimento||'').slice(0,7)===ym));return {ym,...m,andamento:ym===hoje.slice(0,7)};});
-  const completos=porMes.filter(x=>!x.andamento&&x.pedidos>0);
+  const primeiraVenda=vendas.length?vendas.map(v=>diaLocal(v.data_venda)).sort()[0]:null;
+  porMes.forEach(x=>{x.parcial=!!(primeiraVenda&&primeiraVenda.slice(0,7)===x.ym&&primeiraVenda.slice(8)>'01');});
+  const completos=porMes.filter(x=>!x.andamento&&!x.parcial&&x.pedidos>0);
   const mediaMensal=completos.length?soma(completos,x=>x.liquido)/completos.length:null;
   const dias=diasPeriodo(F.de,F.ate);
   const avisos=[];
@@ -109,7 +111,7 @@ TELAS.visao=async function(){
    ${k('Estoque negativo',nf(est.negativos),'produtos','ir(\'estoque\',\'negativo\')',est.negativos?'ruim':'')}
   </div></div>`:''}
   <div class="secao"><h2>Evolução mensal <small>faturamento líquido${veCusto()?' e lucro bruto':''} · mês atual em andamento (barra clara)</small></h2>${grafMeses(porMes)}
-   ${tabela([{t:'Mês',v:x=>mesNome(x.ym)+(x.andamento?' (em andamento)':'')},{t:'Pedidos',v:x=>x.pedidos,n:1,fmt:nf},{t:'Líquido',v:x=>x.liquido,n:1},
+   ${tabela([{t:'Mês',v:x=>mesNome(x.ym)+(x.andamento?' (em andamento)':x.parcial?' (início dos dados)':'')},{t:'Pedidos',v:x=>x.pedidos,n:1,fmt:nf},{t:'Líquido',v:x=>x.liquido,n:1},
      {t:'Var. mês ant.',v:(x)=>{const i=porMes.indexOf(x);const a=porMes[i-1];return a&&a.liquido?(x.liquido/a.liquido-1):null;},n:1,fmt:pct},
      ...(veCusto()?[{t:'CMV',v:x=>x.cmv,n:1},{t:'Lucro bruto',v:x=>x.lucro,n:1},{t:'Margem contrib.',v:x=>x.mc,n:1},{t:'Sem custo',v:x=>x.semCusto,n:1}]:[]),
      ...(veFin()?[{t:'Desp. oper.',v:x=>x.despOp,n:1},{t:'Resultado',v:x=>x.resultado,n:1}]:[])],porMes.slice().reverse(),{rolar:false})}
@@ -159,7 +161,7 @@ function explicarResultado(){const M=window._M;abrir(`<h2>Como o resultado foi c
   <tr><td><b>Margem de contribuição</b></td><td class="n"><b>${brl(M.mc)}</b></td></tr><tr><td>(−) Despesas operacionais</td><td class="n">${brl(M.despOp)}</td></tr><tr><td><b>Resultado estimado</b></td><td class="n"><b>${brl(M.resultado)}</b></td></tr></table>
   ${M.semCusto?`<div class="aviso" style="margin-top:10px">${brl(M.semCusto)} vendidos sem custo: o resultado real é menor do que o mostrado.</div>`:''}
   <div class="mut peq" style="margin-top:8px">Impostos sobre a venda só entram quando lançados como despesa (natureza imposto). Despesas sem competência usam o vencimento.</div><div class="rodape"><button onclick="fechar()">Fechar</button></div>`);}
-function detalharMeses(){detalhar('Faturamento por mês','A média mensal usa somente meses completos com vendas; o mês atual (em andamento) fica fora.',[{t:'Mês',v:x=>mesNome(x.ym)+(x.andamento?' (em andamento)':'')},{t:'Pedidos',v:x=>x.pedidos,n:1,fmt:nf},{t:'Líquido',v:x=>x.liquido,n:1,tot:1},{t:'Entra na média',v:x=>!x.andamento&&x.pedidos?'Sim':'Não'}],window._porMes.slice().reverse());}
+function detalharMeses(){detalhar('Faturamento por mês','A média mensal usa somente meses completos com vendas; o mês atual (em andamento) fica fora.',[{t:'Mês',v:x=>mesNome(x.ym)+(x.andamento?' (em andamento)':'')},{t:'Pedidos',v:x=>x.pedidos,n:1,fmt:nf},{t:'Líquido',v:x=>x.liquido,n:1,tot:1},{t:'Entra na média',v:x=>!x.andamento&&!x.parcial&&x.pedidos?'Sim':'Não'}],window._porMes.slice().reverse());}
 
 // ---------- VENDAS E MERCADO LIVRE ----------
 let abaVendas='pedidos';
