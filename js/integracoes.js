@@ -223,22 +223,9 @@ function modalLocal(l){l=l||{};abrir(`<h2>${l.id?'Editar':'Novo'} local</h2><div
   <div class="erro"></div><div class="rodape"><button onclick="fechar()">Cancelar</button><button class="pri" id="lo_ok">Salvar</button></div>`);
   $('lo_ok').onclick=()=>rodar($('lo_ok'),async()=>{const u=REF.unidades.find(x=>x.id==val('lo_u'));const d={nome:val('lo_n'),unidade_id:u.id,empresa_id:u.empresa_id,tipo:val('lo_t'),ml_conta_id:val('lo_ml')?+val('lo_ml'):null};
     if(l.id)await q(sb.from('pp_locais').update(d).eq('id',l.id));else await q(sb.from('pp_locais').insert(d));await carregarRef();fechar();ir('integracoes');});}
-// Comando de banco pendente para liberar o perfil Sócio 01 (remover depois de aplicado)
-const SQL_SOCIO=`alter table pp_perfis drop constraint if exists pp_perfis_papel_check;
-alter table pp_perfis add constraint pp_perfis_papel_check
-  check (papel in ('master','socio','financeiro','compras','estoque','operacao','banho_tosa'));
-create or replace function pp_tem(variadic papeis text[]) returns boolean language sql stable security definer set search_path=public as \$\$
-  select coalesce(pp_papel() = any(papeis) or pp_papel() in ('master','socio'),false)
-\$\$;`;
-function caixaSqlSocio(){return `<div class="info" style="border-left:6px solid #FFCC00;background:#fffbe6">
-  <b>⚠ Falta 1 comando no banco para o perfil Sócio 01 funcionar</b><br>
-  1) Clique em <b>Copiar comando</b>. &nbsp;2) Clique em <b>Abrir SQL Editor</b> (abre o Supabase no projeto certo). &nbsp;3) Cole na área em branco (Ctrl+V), clique em <b>Run</b> e confira se aparece <b>Success</b>.
-  <pre style="white-space:pre-wrap;font-size:12px;background:#fff;border:1px solid #ddd;padding:8px;border-radius:6px;margin:8px 0">${esc(SQL_SOCIO)}</pre>
-  <button class="pri sm" onclick="navigator.clipboard.writeText(SQL_SOCIO).then(()=>toast('Comando copiado. Agora abra o SQL Editor e cole.'))">Copiar comando</button>
-  <a class="sm" style="margin-left:8px" href="https://supabase.com/dashboard/project/rxqlkfzsvoqydqqzffih/sql/new" target="_blank" rel="noopener"><button class="sm">Abrir SQL Editor</button></a></div>`;}
 async function telaUsuarios(ab){
   const ps=await q(sb.from('pp_perfis').select('*').order('criado_em'));
-  $('conteudo').innerHTML=ab+caixaSqlSocio()+`<div class="info">Quem cria acesso no site aparece aqui como pendente. As permissões valem no servidor e no banco de dados, não só na tela.
+  $('conteudo').innerHTML=ab+`<div class="info">Quem cria acesso no site aparece aqui como pendente. As permissões valem no servidor e no banco de dados, não só na tela.
    <br><b>Sócio 01</b>: vê e opera tudo como o administrador, menos usuários e permissões, backup e auditoria (exclusivos do master). <b>Financeiro</b>: vendas, custos, margens, caixa e contas. <b>Compras</b>: notas, custos, cadastro e recebimento (sem caixa). <b>Estoque</b>: cadastro, movimentações e recebimento — sem custos, valores de notas ou financeiro. <b>Operação</b>: vendas e estoque, sem custos e sem financeiro.</div>
   <div class="secao">${tabela([{t:'Nome',v:p=>p.nome||''},{t:'E-mail',v:p=>p.email},{t:'Perfil',v:p=>p.papel||'',h:p=>p.user_id===sessao.user.id?'<b>'+PAPEIS[p.papel]+'</b>':`<select data-u="${p.user_id}" class="pu" style="width:auto"><option value="">Pendente / sem acesso</option>${Object.entries(PAPEIS).map(([k,v])=>`<option value="${k}" ${p.papel===k?'selected':''}>${v}</option>`).join('')}</select>`},
     {t:'Ativo',v:p=>p.ativo,h:p=>p.user_id===sessao.user.id?'Sim':`<input type="checkbox" class="pa" data-u="${p.user_id}" ${p.ativo?'checked':''}>`},{t:'Criado',v:p=>fdh(p.criado_em)},{t:'Último acesso',v:p=>fdh(p.ultimo_acesso)}],ps,{rolar:false})}</div>`;
