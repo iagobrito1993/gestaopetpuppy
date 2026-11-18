@@ -7,7 +7,7 @@ TELAS.integracoes=async function(extra){
   if(extra==='simplesvet')abaInt='simplesvet';
   const ml=new URLSearchParams(location.hash.split('?')[1]||'').get('ml');
   if(ml){history.replaceState(null,'','#integracoes');abaInt='ml';toast(ml==='ok'?'Conta do Mercado Livre conectada.':'Não foi possível conectar: '+ml,6000);REF.contasML=await q(sb.from('pp_ml_contas').select('*').order('id'));}
-  const abas=[...(ML_ATIVO?[['ml','Mercado Livre']]:[]),['simplesvet','SimplesVet e planilhas'],['log','Histórico de sincronização'],...(master()?[['config','Configurações'],['usuarios','Usuários e permissões'],['backup','Backup e auditoria']]:[])];
+  const abas=[...(ML_ATIVO?[['ml','Mercado Livre']]:[]),['simplesvet','SimplesVet e planilhas'],['log','Histórico de sincronização'],...(master()||socio()?[['config','Configurações']]:[]),...(master()?[['usuarios','Usuários e permissões'],['backup','Backup e auditoria']]:[])];
   const ab=`<div class="abas2">${abas.map(([i,n])=>`<button class="${abaInt===i?'on':''}" onclick="abaInt='${i}';ir('integracoes')">${n}</button>`).join('')}</div>`;
   if(abaInt==='ml'&&!ML_ATIVO)abaInt='simplesvet';
   if(abaInt==='ml'){
@@ -48,8 +48,8 @@ TELAS.integracoes=async function(extra){
     return;
   }
   if(abaInt==='config')return telaConfig(ab);
-  if(abaInt==='usuarios')return telaUsuarios(ab);
-  if(abaInt==='backup')return telaBackup(ab);
+  if(abaInt==='usuarios'&&master())return telaUsuarios(ab);
+  if(abaInt==='backup'&&master())return telaBackup(ab);
 };
 async function conectarML(id){
   try{const st=await rpc('pp_ml_iniciar_oauth',{p_conta:id});const u=`https://auth.mercadolivre.com.br/authorization?response_type=code&client_id=${encodeURIComponent(REF.config.ml_app_id)}&redirect_uri=${encodeURIComponent(EDGE+'?acao=callback')}&state=${encodeURIComponent(st)}`;
@@ -226,7 +226,7 @@ function modalLocal(l){l=l||{};abrir(`<h2>${l.id?'Editar':'Novo'} local</h2><div
 async function telaUsuarios(ab){
   const ps=await q(sb.from('pp_perfis').select('*').order('criado_em'));
   $('conteudo').innerHTML=ab+`<div class="info">Quem cria acesso no site aparece aqui como pendente. As permissões valem no servidor e no banco de dados, não só na tela.
-   <br><b>Financeiro</b>: vendas, custos, margens, caixa e contas. <b>Compras</b>: notas, custos, cadastro e recebimento (sem caixa). <b>Estoque</b>: cadastro, movimentações e recebimento — sem custos, valores de notas ou financeiro. <b>Operação</b>: vendas e estoque, sem custos e sem financeiro.</div>
+   <br><b>Sócio 01</b>: vê e opera tudo como o administrador, menos usuários e permissões, backup e auditoria (exclusivos do master). <b>Financeiro</b>: vendas, custos, margens, caixa e contas. <b>Compras</b>: notas, custos, cadastro e recebimento (sem caixa). <b>Estoque</b>: cadastro, movimentações e recebimento — sem custos, valores de notas ou financeiro. <b>Operação</b>: vendas e estoque, sem custos e sem financeiro.</div>
   <div class="secao">${tabela([{t:'Nome',v:p=>p.nome||''},{t:'E-mail',v:p=>p.email},{t:'Perfil',v:p=>p.papel||'',h:p=>p.user_id===sessao.user.id?'<b>'+PAPEIS[p.papel]+'</b>':`<select data-u="${p.user_id}" class="pu" style="width:auto"><option value="">Pendente / sem acesso</option>${Object.entries(PAPEIS).map(([k,v])=>`<option value="${k}" ${p.papel===k?'selected':''}>${v}</option>`).join('')}</select>`},
     {t:'Ativo',v:p=>p.ativo,h:p=>p.user_id===sessao.user.id?'Sim':`<input type="checkbox" class="pa" data-u="${p.user_id}" ${p.ativo?'checked':''}>`},{t:'Criado',v:p=>fdh(p.criado_em)},{t:'Último acesso',v:p=>fdh(p.ultimo_acesso)}],ps,{rolar:false})}</div>`;
   document.querySelectorAll('.pu').forEach(s=>s.onchange=async()=>{try{await q(sb.from('pp_perfis').update({papel:s.value||null}).eq('user_id',s.dataset.u));toast('Perfil atualizado.');}catch(e){toast(msgErro(e));}});

@@ -5,7 +5,7 @@ const SUPABASE_URL='https://rxqlkfzsvoqydqqzffih.supabase.co';
 const SUPABASE_KEY='sb_publishable__IZIszN0QheZChaDwqVA8A_vlQnP9tw';
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
-const PAPEIS={master:'Administrador master',financeiro:'Financeiro',compras:'Compras',estoque:'Estoque',operacao:'Operação',banho_tosa:'Banho e tosa'};
+const PAPEIS={master:'Administrador master',socio:'Sócio 01',financeiro:'Financeiro',compras:'Compras',estoque:'Estoque',operacao:'Operação',banho_tosa:'Banho e tosa'};
 // Mercado Livre desligado até a integração ser concluída (trocar para true para reativar telas e filtros)
 const ML_ATIVO=false;
 const LOGO_IMG='<img src="img/logo-512.png" alt="Pet Puppy">';
@@ -58,7 +58,9 @@ function msgErro(e){const m=(e&&(e.message||e.error_description||e.details))||St
   return m;}
 function papel(){return perfil&&perfil.papel;}
 function master(){return papel()==='master';}
-function tem(...p){return master()||p.includes(papel());}
+// Sócio 01: vê e opera tudo como o master, exceto usuários, auditoria/backup e ações exclusivas do master
+function socio(){return papel()==='socio';}
+function tem(...p){return master()||socio()||p.includes(papel());}
 function veCusto(){return tem('financeiro','compras');}
 function veFin(){return tem('financeiro');}
 async function q(promessa){const {data,error}=await promessa;if(error)throw error;return data;}
@@ -158,7 +160,7 @@ async function carregarRef(){
 }
 
 // ---------- navegação ----------
-function areasDoPapel(){if(papel()==='banho_tosa')return AREAS.filter(a=>a[0]==='banho');return AREAS.filter(a=>master()||!a[2].length||a[2].includes(papel()));}
+function areasDoPapel(){if(papel()==='banho_tosa')return AREAS.filter(a=>a[0]==='banho');return AREAS.filter(a=>master()||socio()||!a[2].length||a[2].includes(papel()));}
 function montar(){
   $('raiz').innerHTML=`<div class="app"><aside class="lado" id="lado"><div class="marca">${LOGO_IMG}<div><b>Gestão Pet Puppy</b><small>Nós cuidamos do seu pet!</small></div></div>
    <nav id="nav"></nav></aside>
