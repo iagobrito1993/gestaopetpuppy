@@ -1,0 +1,11 @@
+{
+  "manifest_version": 3,
+  "name": "Sincronizar Pet Puppy",
+  "version": "1.0.0",
+  "description": "Sincroniza sozinho o SimplesVet com o Gestão Pet Puppy a cada hora, usando o login que já está no Chrome.",
+  "permissions": ["alarms", "scripting", "tabs", "storage", "notifications"],
+  "host_permissions": ["https://app.simples.vet/*", "https://api.simples.vet/*", "https://gestaopetpuppy.com.br/*"],
+  "background": { "service_worker": "background.js" },
+  "action": { "default_popup": "popup.html", "default_title": "Sincronizar Pet Puppy" },
+  "icons": { "16": "icon16.png", "48": "icon48.png", "128": "icon128.png" }
+}
