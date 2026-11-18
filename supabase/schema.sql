@@ -80,10 +80,7 @@ on conflict (chave) do nothing;
 insert into pp_empresas(nome,razao_social,cnpj) values
  ('Pet Puppy','LH VEZONI COMERCIO DE RACOES PARA ANIMAIS LTDA','15176325000105')
 on conflict (cnpj) do nothing;
-insert into pp_empresas(nome) select 'MJ Store' where not exists (select 1 from pp_empresas where nome='MJ Store');
 insert into pp_unidades(empresa_id,nome) select id,'Loja Aclimação' from pp_empresas e where cnpj='15176325000105'
-  and not exists (select 1 from pp_unidades u where u.empresa_id=e.id);
-insert into pp_unidades(empresa_id,nome) select id,'MJ Store' from pp_empresas e where nome='MJ Store'
   and not exists (select 1 from pp_unidades u where u.empresa_id=e.id);
 insert into pp_locais(unidade_id,empresa_id,nome,tipo) select u.id,u.empresa_id,'Loja (SimplesVet)','loja' from pp_unidades u
   where u.nome='Loja Aclimação' and not exists (select 1 from pp_locais l where l.unidade_id=u.id);
@@ -144,8 +141,6 @@ begin
 end $$;
 insert into pp_ml_contas(empresa_id,apelido) select id,'Pet Puppy' from pp_empresas where cnpj='15176325000105'
   and not exists (select 1 from pp_ml_contas where apelido='Pet Puppy');
-insert into pp_ml_contas(empresa_id,apelido) select id,'MJ Store' from pp_empresas where nome='MJ Store'
-  and not exists (select 1 from pp_ml_contas where apelido='MJ Store');
 
 create table if not exists pp_ml_anuncios(
   conta_id int references pp_ml_contas(id), item_id text, variacao_id text not null default '',
@@ -552,7 +547,7 @@ create or replace view pp_v_saldos with (security_invoker=true) as
 create or replace function pp_gravar_venda(p_venda jsonb, p_itens jsonb) returns text language plpgsql security definer set search_path=public as $$
 declare vid bigint; ant pp_vendas; x jsonb; k int:=0; pid uuid; res text;
 begin
-  if auth.uid() is not null and not pp_tem('financeiro','operacao') then raise exception 'Sem permissão'; end if;
+  if auth.uid() is not null and not pp_tem('financeiro','operacao') and not (p_venda->>'origem'='banho_tosa' and pp_tem('banho_tosa')) then raise exception 'Sem permissão'; end if;
   select * into ant from pp_vendas where origem=p_venda->>'origem' and origem_ref=p_venda->>'origem_ref';
   insert into pp_vendas(canal,empresa_id,unidade_id,ml_conta_id,origem,origem_ref,pedido,pack_id,data_venda,status,cliente,logistica,
      valor_bruto,desconto,valor_cancelado,valor_devolvido,frete_cobrado,tarifa_venda,frete_vendedor,outros_custos_var,

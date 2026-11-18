@@ -5,17 +5,20 @@ const SUPABASE_URL='https://rxqlkfzsvoqydqqzffih.supabase.co';
 const SUPABASE_KEY='sb_publishable__IZIszN0QheZChaDwqVA8A_vlQnP9tw';
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
-const PAPEIS={master:'Administrador master',financeiro:'Financeiro',compras:'Compras',estoque:'Estoque',operacao:'Operação'};
+const PAPEIS={master:'Administrador master',financeiro:'Financeiro',compras:'Compras',estoque:'Estoque',operacao:'Operação',banho_tosa:'Banho e tosa'};
+// Mercado Livre desligado até a integração ser concluída (trocar para true para reativar telas e filtros)
+const ML_ATIVO=false;
 const LOGO_SVG=`<svg width="24" height="24" viewBox="0 0 64 64"><circle cx="22" cy="22" r="6" fill="#fff"/><circle cx="42" cy="22" r="6" fill="#fff"/><circle cx="13" cy="35" r="5" fill="#fff"/><circle cx="51" cy="35" r="5" fill="#fff"/><ellipse cx="32" cy="44" rx="12" ry="10" fill="#fff"/></svg>`;
 // [id, rótulo, papéis que veem (vazio = todos)]
 const AREAS=[
  ['visao','Visão geral',['financeiro','compras','operacao']],
+ ['banho','Banho e tosa',['operacao','banho_tosa','financeiro']],
  ['produtos','Produtos e SKUs',[]],
  ['estoque','Estoque e movimentações',[]],
  ['nfe','Notas fiscais de entrada',['financeiro','compras']],
  ['nfs','Notas fiscais de saída',['financeiro','compras','operacao']],
  ['compras','Compras e recebimentos',['compras','estoque','financeiro']],
- ['vendas','Vendas e Mercado Livre',['financeiro','operacao']],
+ ['vendas','Vendas',['financeiro','operacao']],
  ['custos','Custos e margens',['financeiro','compras']],
  ['financeiro','Financeiro e fluxo de caixa',['financeiro']],
  ['conciliacao','Conciliação e pendências',[]],
@@ -154,9 +157,9 @@ async function carregarRef(){
 }
 
 // ---------- navegação ----------
-function areasDoPapel(){return AREAS.filter(a=>master()||!a[2].length||a[2].includes(papel()));}
+function areasDoPapel(){if(papel()==='banho_tosa')return AREAS.filter(a=>a[0]==='banho');return AREAS.filter(a=>master()||!a[2].length||a[2].includes(papel()));}
 function montar(){
-  $('raiz').innerHTML=`<div class="app"><aside class="lado" id="lado"><div class="marca"><div class="logo">${LOGO_SVG}</div><div><b>Gestão Pet Puppy</b><small>Pet Puppy · MJ Store</small></div></div>
+  $('raiz').innerHTML=`<div class="app"><aside class="lado" id="lado"><div class="marca"><div class="logo">${LOGO_SVG}</div><div><b>Gestão Pet Puppy</b><small>Pet Puppy &amp; Cia</small></div></div>
    <nav id="nav"></nav></aside>
    <div class="principal"><div class="topo"><div style="display:flex;gap:10px;align-items:center"><button class="menu-mob sm" onclick="$('lado').classList.toggle('aberto')">☰</button><h1 id="titulo"></h1></div>
    <div class="quem"><span>${esc(perfil.nome||perfil.email)} · ${PAPEIS[perfil.papel]}</span><button class="sm" onclick="sb.auth.signOut()">Sair</button></div></div>
@@ -178,7 +181,7 @@ const TELAS={};
 function opcoes(lista,v,vazio,fv=x=>x.id,fn=x=>x.nome){return (vazio!=null?`<option value="">${esc(vazio)}</option>`:'')+lista.map(x=>`<option value="${esc(fv(x))}" ${String(fv(x))===String(v)?'selected':''}>${esc(fn(x))}</option>`).join('');}
 function categorias(){return [...new Set(REF.produtos.map(p=>p.categoria).filter(Boolean))].sort();}
 function barraFiltros(campos,aoMudar){
-  const c=campos||['periodo','empresa','canal'];
+  let c=campos||['periodo','empresa','canal'];if(!ML_ATIVO)c=c.filter(x=>x!=='canal'&&x!=='conta');if(REF.empresas.length<2)c=c.filter(x=>x!=='empresa');if(REF.unidades.length<2)c=c.filter(x=>x!=='unidade');
   const h=[];
   if(c.includes('periodo'))h.push(`<div><label>De</label><input type="date" id="f_de" value="${F.de}"></div><div><label>Até</label><input type="date" id="f_ate" value="${F.ate}"></div>
     <div><label>Atalho</label><select id="f_at"><option value="">—</option><option value="hoje">Hoje</option><option value="mes">Este mês</option><option value="mesant">Mês anterior</option><option value="30">Últimos 30 dias</option><option value="90">Últimos 90 dias</option><option value="ano">Este ano</option><option value="12m">Últimos 12 meses</option></select></div>`);

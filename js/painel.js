@@ -71,7 +71,7 @@ TELAS.visao=async function(){
   const avisos=[];
   if(M.semCusto>0)avisos.push(`${brl(M.semCusto)} em vendas (${nf(M.qtdSemCusto)} un.) estão sem custo confiável: CMV, lucro e margem estão <b>superestimados</b> nesse valor. <button class="lk" onclick="detalharSemCusto()">Ver itens</button>`);
   if(M.semVinculo>0)avisos.push(`${brl(M.semVinculo)} em itens vendidos sem vínculo com o cadastro mestre. <button class="lk" onclick="ir('produtos','vinculos')">Vincular</button>`);
-  if(!vendas.length)avisos.push('Ainda não há vendas importadas. Conecte o Mercado Livre e importe as vendas do SimplesVet em <button class="lk" onclick="ir(\'integracoes\')">Integrações</button>.');
+  if(!vendas.length)avisos.push('Ainda não há vendas. Importe as vendas do SimplesVet em <button class="lk" onclick="ir(\'integracoes\')">Integrações</button>.');
   if(fin&&fin.incompleto.length)avisos.push('Caixa e projeções incompletos: '+fin.incompleto.join('; ')+'.');
   if(REF.config.tributos_validado_contabilidade!==true)avisos.push('O tratamento de tributos no custo ainda não foi validado pela contabilidade (Integrações → Configurações).');
   window._M=M;window._porMes=porMes;window._fin=fin;window._est=est;
@@ -167,7 +167,7 @@ TELAS.vendas=async function(){
   const vs=await carregarVendas(F.de,F.ate,true);
   const lst=filtrarVendas(vs);
   const M=metricas(vs,[]);
-  const porCanal=Object.entries(agrupar(M.vendas,v=>v.ml_conta_id?'ML · '+contaML(v.ml_conta_id).apelido:'Loja · '+empresa(v.empresa_id).nome)).map(([k,a])=>{const m=metricas(a,[]);return {k,...m};});
+  const porCanal=Object.entries(agrupar(M.vendas,v=>v.ml_conta_id?'ML · '+contaML(v.ml_conta_id).apelido:v.origem==='banho_tosa'?'Banho e tosa':'Loja')).map(([k,a])=>{const m=metricas(a,[]);return {k,...m};});
   const filtroSt=window._fst||'';
   const vis=lst.filter(v=>!filtroSt||(filtroSt==='dup'?v.duplicada_de:v.status===filtroSt));
   const colsPed=[...COLS_VENDA.slice(0,5),{t:'Líquido',v:v=>v.valor_bruto-v.valor_cancelado-v.valor_devolvido-v.desconto,n:1,tot:1},
@@ -178,7 +178,7 @@ TELAS.vendas=async function(){
     {t:'',v:v=>'',h:v=>v.duplicada_de?'<span class="tag">duplicada</span>':''}];
   $('conteudo').innerHTML=barraFiltros(['periodo','empresa','canal','conta','categoria','produto'],()=>ir('vendas'))+
   `<div class="kpis">${porCanal.map(c=>`<div class="kpi"><div class="l">${esc(c.k)}</div><div class="v">${brl(c.liquido)}</div><div class="s">${nf(c.pedidos)} pedidos · ticket ${brl(c.ticket)}${veCusto()?` · MC ${pct(c.liquido?c.mc/c.liquido:null)}`:''}</div></div>`).join('')||'<div class="mut">Sem vendas no período.</div>'}</div>
-  <div class="abas2">${[['pedidos','Por pedido'],['produtos','Por produto'],['anuncios','Anúncios ML']].map(([i,n])=>`<button class="${abaVendas===i?'on':''}" onclick="abaVendas='${i}';ir('vendas')">${n}</button>`).join('')}</div>
+  <div class="abas2">${[['pedidos','Por pedido'],['produtos','Por produto'],...(ML_ATIVO?[['anuncios','Anúncios ML']]:[])].map(([i,n])=>`<button class="${abaVendas===i?'on':''}" onclick="abaVendas='${i}';ir('vendas')">${n}</button>`).join('')}</div>
   <div class="secao">${abaVendas==='pedidos'?`<h2>Pedidos <small>Data da venda ≠ data do recebimento ≠ data de liberação do dinheiro</small>
     <span><select id="fst" style="width:auto" onchange="window._fst=this.value;ir('vendas')"><option value="">Todos os status</option>${Object.entries(STATUS_V).map(([k,v])=>`<option value="${k}" ${filtroSt===k?'selected':''}>${v[0]}</option>`).join('')}<option value="dup" ${filtroSt==='dup'?'selected':''}>Marcadas como duplicadas</option></select>
     <button class="sm" onclick="exportarTabela('vendas',window._cv,window._lv)">CSV</button>${tem('financeiro','operacao')?' <button class="sm pri" onclick="ir(\'integracoes\')">Importar / sincronizar</button>':''}</span></h2>

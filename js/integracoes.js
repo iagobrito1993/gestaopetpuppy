@@ -2,13 +2,14 @@
 // Integrações (Mercado Livre, SimplesVet, planilhas), configurações, usuários, conciliação
 // =====================================================================
 const EDGE=SUPABASE_URL+'/functions/v1/pp-ml';
-let abaInt='ml';
+let abaInt=ML_ATIVO?'ml':'simplesvet';
 TELAS.integracoes=async function(extra){
   if(extra==='simplesvet')abaInt='simplesvet';
   const ml=new URLSearchParams(location.hash.split('?')[1]||'').get('ml');
   if(ml){history.replaceState(null,'','#integracoes');abaInt='ml';toast(ml==='ok'?'Conta do Mercado Livre conectada.':'Não foi possível conectar: '+ml,6000);REF.contasML=await q(sb.from('pp_ml_contas').select('*').order('id'));}
-  const abas=[['ml','Mercado Livre'],['simplesvet','SimplesVet e planilhas'],['log','Histórico de sincronização'],...(master()?[['config','Configurações'],['usuarios','Usuários e permissões'],['backup','Backup e auditoria']]:[])];
+  const abas=[...(ML_ATIVO?[['ml','Mercado Livre']]:[]),['simplesvet','SimplesVet e planilhas'],['log','Histórico de sincronização'],...(master()?[['config','Configurações'],['usuarios','Usuários e permissões'],['backup','Backup e auditoria']]:[])];
   const ab=`<div class="abas2">${abas.map(([i,n])=>`<button class="${abaInt===i?'on':''}" onclick="abaInt='${i}';ir('integracoes')">${n}</button>`).join('')}</div>`;
+  if(abaInt==='ml'&&!ML_ATIVO)abaInt='simplesvet';
   if(abaInt==='ml'){
     const appId=REF.config.ml_app_id;
     $('conteudo').innerHTML=ab+`<div class="info">Integração oficial (API do Mercado Livre e Mercado Pago), somente leitura: pedidos, itens, tarifas, frete, cancelamentos, devoluções, anúncios, SKUs, estoque Full e datas de liberação do dinheiro. A atualização é feita quando você clica em Sincronizar (ou pela rotina agendada, se configurada) — <b>não é em tempo real</b>. Nenhum preço ou estoque é alterado no Mercado Livre.</div>
@@ -24,7 +25,7 @@ TELAS.integracoes=async function(extra){
   if(abaInt==='simplesvet'){
     $('conteudo').innerHTML=ab+`<div class="info">O SimplesVet não oferece API pública para integração. A alternativa é exportar relatórios do SimplesVet (CSV/Excel) e importar aqui — o sistema mostra uma conferência antes de gravar e reimportar o mesmo arquivo não duplica registros. O "SimpleZ" mencionado é o próprio SimplesVet.</div>
     <div class="kpis">
-     ${[['sv_produtos','Produtos, estoque e custos','Comercial → Produtos e serviços → exportar'],['sv_vendas','Vendas (itens)','Vendas → Vendas → Exportar para CSV'],['sv_mov','Movimentações de estoque','Estoque → Movimentações → exportar'],['sv_fin','Contas a pagar e a receber','Financeiro → Contas → exportar'],['ml_vendas','Relatório de vendas do Mercado Livre','Vendas → Exportar (Excel) — alternativa à API']]
+     ${[['sv_produtos','Produtos, estoque e custos','Comercial → Produtos e serviços → exportar'],['sv_vendas','Vendas (itens)','Vendas → Vendas → Exportar para CSV'],['sv_mov','Movimentações de estoque','Estoque → Movimentações → exportar'],['sv_fin','Contas a pagar e a receber','Financeiro → Contas → exportar'],...(ML_ATIVO?[['ml_vendas','Relatório de vendas do Mercado Livre','Vendas → Exportar (Excel) — alternativa à API']]:[])]
        .map(([k,t,s])=>`<div class="kpi" onclick="modalImportar('${k}')"><div class="l">Importar</div><div class="v" style="font-size:16px">${t}</div><div class="s">${s}</div></div>`).join('')}
      <div class="kpi" onclick="ir('nfe')"><div class="l">Importar</div><div class="v" style="font-size:16px">XML de notas fiscais</div><div class="s">Entrada e saída, em lote</div></div></div>`;
     return;
@@ -192,7 +193,7 @@ async function telaConfig(ab){
    <div class="mut peq">ICMS, PIS e COFINS destacados não entram no custo (créditos dependem do regime tributário — confirme com a contabilidade). Mudanças valem para os próximos recebimentos.</div></div>
    <div class="secao"><h2>Geral e alertas</h2><div class="campo"><label>Fuso horário</label><select id="cfg_fuso">${['America/Sao_Paulo','America/Cuiaba','America/Manaus','America/Fortaleza','America/Recife','America/Bahia','America/Rio_Branco','America/Noronha'].map(f=>`<option ${c.fuso===f?'selected':''}>${f}</option>`).join('')}</select></div>
    <div class="c3"><div class="campo"><label>Cobertura mínima (dias)</label><input id="cfg_cobertura_minima_dias" value="${c.cobertura_minima_dias??15}"></div><div class="campo"><label>Sem movimento (dias)</label><input id="cfg_sem_movimento_dias" value="${c.sem_movimento_dias??60}"></div><div class="campo"><label>Alerta de validade (dias)</label><input id="cfg_validade_alerta_dias" value="${c.validade_alerta_dias??45}"></div></div>
-   <div class="campo"><label>App ID do Mercado Livre (developers.mercadolivre.com.br)</label><input id="cfg_ml_app_id" value="${esc(c.ml_app_id||'')}"><div class="mut peq">URI de redirecionamento a cadastrar no app: <span class="mono">${EDGE}?acao=callback</span></div></div></div></div>
+   <div class="campo" style="${ML_ATIVO?'':'display:none'}"><label>App ID do Mercado Livre (developers.mercadolivre.com.br)</label><input id="cfg_ml_app_id" value="${esc(c.ml_app_id||'')}"><div class="mut peq">URI de redirecionamento a cadastrar no app: <span class="mono">${EDGE}?acao=callback</span></div></div></div></div>
   <div class="rodape" style="justify-content:flex-start"><button class="pri" id="cfg_ok">Salvar configurações</button></div>
   <div class="grade2"><div class="secao"><h2>Empresas e unidades</h2>${tabela([{t:'Empresa',v:e=>e.nome},{t:'Razão social',v:e=>e.razao_social||''},{t:'CNPJ',v:e=>e.cnpj||'',h:e=>e.cnpj?esc(e.cnpj):'<span class="tag a">informar</span>'}],REF.empresas,{rolar:false,clique:e=>modalEmpresa(e)})}<button class="sm" onclick="modalEmpresa()">+ Empresa</button>
    <div class="mut peq" style="margin-top:6px">O CNPJ identifica automaticamente se uma NF é de entrada ou de saída.</div></div>
@@ -233,8 +234,8 @@ async function telaBackup(ab){
 }
 
 // ---------- CONCILIAÇÃO E PENDÊNCIAS ----------
-const TIPOS_PEND={venda_sem_nota:'Venda sem nota',nota_sem_mov:'Nota sem movimentação',receb_divergente:'Recebimento diferente do previsto',venda_sem_custo:'Vendido sem custo',sem_vinculo:'Item sem vínculo de SKU',qtd_divergente:'Diferença de quantidade',duplicidade:'Possível duplicidade',cancel_nao_conciliado:'Cancelamento/devolução não conciliado',unidade_divergente:'Unidade de medida divergente',produto_duplicado:'Produto duplicado',custo_revisado:'Custo de venda antiga mudaria',outro:'Outro'};
-let filtroPend={status:'abertas',tipo:''};
+const TIPOS_PEND_={venda_sem_nota:'Venda sem nota',nota_sem_mov:'Nota sem movimentação',receb_divergente:'Recebimento diferente do previsto',venda_sem_custo:'Vendido sem custo',sem_vinculo:'Item sem vínculo de SKU',qtd_divergente:'Diferença de quantidade',duplicidade:'Possível duplicidade',cancel_nao_conciliado:'Cancelamento/devolução não conciliado',unidade_divergente:'Unidade de medida divergente',produto_duplicado:'Produto duplicado',custo_revisado:'Custo de venda antiga mudaria',outro:'Outro'};
+const TIPOS_PEND=TIPOS_PEND_;let filtroPend={status:'abertas',tipo:''};
 TELAS.conciliacao=async function(){
   const ps=await tudo(()=>sb.from('pp_pendencias').select('*').order('id',{ascending:false}));
   const l=ps.filter(p=>(filtroPend.status==='todas'||(filtroPend.status==='abertas'?['aberta','em_analise'].includes(p.status):p.status===filtroPend.status))&&(!filtroPend.tipo||p.tipo===filtroPend.tipo));
