@@ -114,50 +114,72 @@ table.t tfoot td{font-weight:700;border-top:2px solid var(--line)}
 .demo{background:#fde68a;color:#78350f;font-weight:700;padding:2px 8px;border-radius:6px;font-size:11px}
 
 /* ===== tema Pet Puppy (amarelo) ===== */
-button.pri{background:linear-gradient(180deg,var(--y1),var(--y2));border-color:#e6b000;color:#1b1a17;font-weight:700;box-shadow:0 1px 0 rgba(0,0,0,.06)}
-button.pri:hover{background:linear-gradient(180deg,#FFDF5C,#FFBE00);border-color:#d9a600}
-button.lk{color:#9a6b00}
+button.pri{background:#FFCC00;border-color:#F2B600;color:#1b1a17;font-weight:700}
+button.pri:hover{background:#FFC000;border-color:#E0A800}
+button.lk{color:#8a6400}
 input:focus,select:focus,textarea:focus{outline:2px solid #FFD84D;border-color:transparent}
-.lado{background:linear-gradient(180deg,#1f1d18 0%,#14130f 100%);color:#e9e3d0;border-right:4px solid var(--pri)}
-.lado .marca{flex-direction:column;align-items:center;text-align:center;padding:8px 6px 18px;gap:8px;border-bottom:1px solid #2e2b23;margin-bottom:10px}
-.lado .marca img{width:112px;height:112px;filter:drop-shadow(0 6px 14px rgba(255,204,0,.25))}
-.lado .marca b{color:#FFCC00;font-size:16px;letter-spacing:.2px}.lado .marca small{color:#b8b09a}
-.lado nav button{color:#ddd6c2}
-.lado nav button:hover{background:#2a2720;color:#fff}
-.lado nav button.on{background:var(--pri);color:#1b1a17;font-weight:700}
-.lado nav button .n{background:#e5484d}
-.topo{border-bottom:3px solid var(--pri)}
-.topo h1{display:flex;align-items:center;gap:10px}
-.topo .mini{width:30px;height:30px;display:none}
-@media (max-width:860px){.topo .mini{display:block}}
-.kpi{border-top:3px solid var(--pri)}
-.kpi:hover{border-color:#e6c766;border-top-color:var(--pri2);box-shadow:0 4px 14px rgba(255,196,0,.15)}
-.kpi.alerta{border-color:#f1c38b;border-top-color:#f59e0b}
-.secao h2{border-left:4px solid var(--pri);padding-left:8px}
-.abas2 button.on{background:#1b1a17;color:#FFCC00;border-color:#1b1a17}
-.filtros{border-color:#efe5c3;background:#fffdf5}
-table.t th{background:#fff8dc}
-table.t tr.cl:hover td{background:#fffbe8}
-.drop.on{border-color:var(--pri2);background:var(--pril)}
-.linha-tempo .ev:before{background:var(--pri2)}
-.tela-login{min-height:100vh;background:radial-gradient(circle at 20% 10%,#FFE066 0,#FFCC00 40%,#F5B300 100%);display:flex;align-items:center;justify-content:center;padding:20px}
-.tela-login .login{margin:0;border:0;box-shadow:0 20px 50px rgba(80,55,0,.25);text-align:center}
-.tela-login .login img{width:150px;height:150px;margin-top:-90px;filter:drop-shadow(0 8px 18px rgba(0,0,0,.18))}
+input,select{height:38px}
+textarea{height:auto}
+/* menu lateral */
+.lado{width:250px;background:#1d1c19;color:#e9e3d0;padding:16px 12px}
+.lado .marca{display:flex;align-items:center;gap:12px;padding:4px 6px 16px;margin-bottom:10px;border-bottom:1px solid #33302a}
+.lado .marca img{width:56px;height:56px;flex-shrink:0}
+.lado .marca b{color:#fff;font-size:15px;line-height:1.2}
+.lado .marca small{color:#FFCC00;font-size:11.5px;display:block;margin-top:2px}
+.lado nav button{color:#d8d2c0;font-size:13.5px;padding:9px 12px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+.lado nav button:hover{background:#2b2924;color:#fff}
+.lado nav button.on{background:#FFCC00;color:#1b1a17;font-weight:700}
+.lado nav button .n{float:right;background:#e5484d;margin-top:1px}
+@media (max-width:860px){.lado{left:-270px;width:260px}}
+/* topo e conteúdo */
+.topo{height:58px;padding:0 28px;border-bottom:1px solid var(--line);box-shadow:inset 0 -3px 0 #FFCC00}
+.topo h1{font-size:18px;font-weight:700}
+.topo .mini{width:28px;height:28px;display:none}
+@media (max-width:860px){.topo .mini{display:block}.topo{padding:0 12px}}
+.conteudo{padding:22px 28px 80px;max-width:1320px;margin:0 auto}
+/* filtros: campos com largura fixa, alinhados */
+.filtros{display:flex;flex-wrap:wrap;gap:10px 12px;align-items:flex-end;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:16px}
+.filtros>div{flex:0 1 170px;min-width:140px}
+.filtros>div.btn{flex:0 0 auto;min-width:0}
+.filtros>div.btn button{height:38px}
+.filtros label{font-size:11.5px;color:var(--mut);font-weight:600;margin-bottom:4px}
+/* cartões de números */
+.kpis{grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;margin-bottom:16px}
+.kpi{border-radius:12px;padding:14px 16px;border:1px solid var(--line);box-shadow:0 1px 2px rgba(0,0,0,.03);position:relative;overflow:hidden}
+.kpi:before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:#FFCC00}
+.kpi .l{font-size:12px}.kpi .v{font-size:22px;margin-top:4px}.kpi .s{font-size:11.5px;line-height:1.35}
+.kpi:hover{border-color:#e9d9a0;box-shadow:0 4px 12px rgba(0,0,0,.06)}
+.kpi.alerta:before{background:#f59e0b}.kpi.ruim:before{background:#e5484d}
+.kpi .aviso{background:none;border:0;padding:0;margin:0}
+/* seções */
+.secao{border-radius:12px;padding:16px 18px;box-shadow:0 1px 2px rgba(0,0,0,.03);margin-bottom:16px}
+.secao h2{font-size:15px;margin-bottom:12px}
+.abas2{gap:8px;margin-bottom:16px}
+.abas2 button{height:36px;padding:0 16px}
+.abas2 button.on{background:#1d1c19;color:#FFCC00;border-color:#1d1c19;font-weight:600}
+.barra-acoes{align-items:center}
+table.t th{background:#faf7ec}
+table.t tr.cl:hover td{background:#fffbea}
+.drop.on{border-color:#F2B600;background:var(--pril)}
+/* login */
+.tela-login{min-height:100vh;background:#FFCC00;background-image:radial-gradient(circle at 15% 15%,rgba(255,255,255,.35) 0,transparent 45%),radial-gradient(circle at 85% 90%,rgba(0,0,0,.08) 0,transparent 40%);display:flex;align-items:center;justify-content:center;padding:24px}
+.tela-login .login{margin:0;width:100%;max-width:380px;border:0;border-radius:18px;box-shadow:0 18px 45px rgba(70,50,0,.25);text-align:center;padding:28px 28px 24px}
+.tela-login .login img{width:120px;height:120px;display:block;margin:-80px auto 6px;filter:drop-shadow(0 6px 14px rgba(0,0,0,.18))}
 .tela-login .login form{text-align:left}
-.tela-login .login h1{font-size:21px}
+.tela-login .login h1{font-size:20px;margin:6px 0 4px}
 </style>
 </head>
 <body>
 <div id="raiz"><div class="tela-login"><div class="login"><img src="img/logo-512.png" alt="Pet Puppy"><h1>Gestão Pet Puppy</h1><div class="sub">Carregando…</div></div></div></div>
 <div id="ov" class="ov oculto"><div id="modal" class="modal"></div></div>
 <div id="toast" class="toast oculto"></div>
-<script src="js/nucleo.js?v=4"></script>
-<script src="js/painel.js?v=4"></script>
-<script src="js/estoque.js?v=4"></script>
-<script src="js/notas.js?v=4"></script>
-<script src="js/financeiro.js?v=4"></script>
-<script src="js/integracoes.js?v=4"></script>
-<script src="js/banho.js?v=4"></script>
+<script src="js/nucleo.js?v=5"></script>
+<script src="js/painel.js?v=5"></script>
+<script src="js/estoque.js?v=5"></script>
+<script src="js/notas.js?v=5"></script>
+<script src="js/financeiro.js?v=5"></script>
+<script src="js/integracoes.js?v=5"></script>
+<script src="js/banho.js?v=5"></script>
 <script>iniciar();</script>
 </body>
 </html>
