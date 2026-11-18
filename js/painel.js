@@ -77,7 +77,7 @@ TELAS.visao=async function(){
   window._M=M;window._porMes=porMes;window._fin=fin;window._est=est;
   const k=(l,v,s,fn,cls='',aviso='')=>`<div class="kpi ${cls}" onclick="${fn}">${aviso?`<span class="aviso" title="Dado incompleto">⚠ ${aviso}</span>`:''}<div class="l">${l}</div><div class="v">${v}</div><div class="s">${s||''}</div></div>`;
   $('conteudo').innerHTML=barraFiltros(['periodo','empresa','unidade','canal','conta','categoria','produto'],()=>ir('visao'))+
-  avisos.map(a=>`<div class="aviso">${a}</div>`).join('')+
+  (avisos.length?`<div class="aviso"><b>Atenção</b><ul style="margin:4px 0 0;padding-left:18px">${avisos.map(a=>`<li>${a}</li>`).join('')}</ul></div>`:'')+
   `<div class="kpis">
    ${k('Vendido hoje',brl(Mh.liquido),nf(Mh.pedidos)+' pedidos','detalharVendas(\'hoje\')')}
    ${k('Vendido neste mês',brl(Mm.liquido),nf(Mm.pedidos)+' pedidos · mês em andamento','detalharVendas(\'mes\')')}
